@@ -9,7 +9,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-FPS = 60
+FPS = 240
 
 WIDTH, HEIGHT = 600, 700
 
@@ -22,6 +22,7 @@ PIXEL_SIZE = WIDTH // COLS
 BG_COLOR = WHITE
 
 DRAW_GRID_LINES = True
+
 
 def get_font(size):
     return pygame.font.SysFont('comicsans', size)

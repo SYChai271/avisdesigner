@@ -1,7 +1,10 @@
 from utils import *
+import tkinter as tk
+from tkinter import colorchooser
+
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Paint")
+pygame.display.set_caption("Avis Designer")
 
 
 def init_grid(rows, cols, colour):
@@ -30,9 +33,13 @@ def draw_grid(win, grid):
                              (i * PIXEL_SIZE, HEIGHT - TOOLBAR_HEIGHT))
 
 
-def draw(win, grid):
+def draw(win, grid, buttons):
     win.fill(BG_COLOR)
     draw_grid(WIN, grid)
+
+    for button in buttons:
+        button.draw(WIN)
+
     pygame.display.update()
 
 
@@ -46,9 +53,55 @@ def get_row_col_from_mouse_pos(pos):
     return row, col
 
 
+def fill(row, col, target_colour, drawing_colour):
+    if grid[row][col] != target_colour:
+        return
+    if grid[row][col] == drawing_colour:
+        return
+    grid[row][col] = drawing_colour
+    fill(row + 1, col, target_colour, drawing_colour)
+    fill(row - 1, col, target_colour, drawing_colour)
+    fill(row, col + 1, target_colour, drawing_colour)
+    fill(row, col - 1, target_colour, drawing_colour)
+
+    return
+
+
+def erase(row, col, target_colour, tool):
+    if tool == "fill":
+        if grid[row][col] != target_colour:
+            return
+        grid[row][col] = BG_COLOR
+        erase(row + 1, col, target_colour, tool)
+        erase(row - 1, col, target_colour, tool)
+        erase(row, col + 1, target_colour, tool)
+        erase(row, col - 1, target_colour, tool)
+
+        return
+    else:
+        grid[row][col] = BG_COLOR
+
+
 run = True
 clock = pygame.time.Clock()
 grid = init_grid(ROWS, COLS, BG_COLOR)
+drawing_colour = BLACK
+tool = "pen"
+erase_ = False
+
+button_y = HEIGHT - TOOLBAR_HEIGHT/2 - 25
+buttons = [
+    Button(10, button_y, 50, 50, BLACK),
+    Button(70, button_y, 50, 50, RED),
+    Button(130, button_y, 50, 50, GREEN),
+    Button(190, button_y, 50, 50, BLUE),
+    Button(250, button_y, 50, 50, WHITE, "RGB", BLACK),
+    Button(310, button_y, 50, 50, BG_COLOR, "Erase", BLACK),
+    Button(370, button_y, 50, 50, BG_COLOR, "Clear", BLACK),
+    Button(430, button_y, 50, 50, drawing_colour, "Pen", BLACK),
+    Button(490, button_y, 50, 50, drawing_colour, "Fill", BLACK),
+]
+
 
 while run:
     clock.tick(FPS)
@@ -61,10 +114,38 @@ while run:
             pos = pygame.mouse.get_pos()
             try:
                 row, col = get_row_col_from_mouse_pos(pos)
-                grid[row][col] = BLACK
+                if not erase_:
+                    if tool == "pen":
+                        grid[row][col] = drawing_colour
+                    if tool == "fill":
+                        fill(row, col, grid[row][col], drawing_colour)
+                else:
+                    erase(row, col, grid[row][col], tool)
             except IndexError:
-                pass
+                for button in buttons:
+                    if not button.clicked(pos):
+                        continue
+                    if button.text == "Pen":
+                        tool = "pen"
+                    if button.text == "Fill":
+                        tool = "fill"
+                    if button.text == "Erase":
+                        erase_ = not erase_     
 
-    draw(WIN, grid)
+                    drawing_colour = button.colour
+
+                    if button.text == "RGB":
+                        colour = colorchooser.askcolor(
+                            initialcolor=BLACK)
+                        if colour[0]:
+                            drawing_colour = colour[1]
+
+                    if button.text == "Clear":
+                        grid = init_grid(ROWS, COLS, BG_COLOR)
+                        drawing_colour = BLACK
+                        break
+
+
+    draw(WIN, grid, buttons)
 
 pygame.quit()
