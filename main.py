@@ -71,6 +71,8 @@ def erase(row, col, target_colour, tool):
     if tool == "fill":
         if grid[row][col] != target_colour:
             return
+        if grid[row][col] == BG_COLOR:
+            return
         grid[row][col] = BG_COLOR
         erase(row + 1, col, target_colour, tool)
         erase(row - 1, col, target_colour, tool)
